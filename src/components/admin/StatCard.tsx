@@ -1,7 +1,7 @@
 export const StatCard: React.FC<{
   title: string;
   value: number;
-  icon: React.ComponentType;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
 }> = ({ title, value, icon: Icon, color }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
