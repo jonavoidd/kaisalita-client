@@ -60,17 +60,17 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="space-x-4">
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
             <button
               onClick={() => navigate("/board")}
-              className="bg-gray-100 hover:bg-red-700 border-1 border-red-900 text-red-900 hover:text-white px-8 py-4 rounded-lg text-xl font-semibold transition-colors inline-flex items-center gap-2 cursor-pointer"
+              className="bg-gray-100 hover:bg-red-700 border border-red-900 text-red-900 hover:text-white px-8 py-4 rounded-lg text-lg sm:text-xl font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto flex-1"
             >
               View Community Board
               <Eye className="w-5 h-5" />
             </button>
             <button
               onClick={() => navigate("/form")}
-              className="bg-red-900 hover:bg-red-700 border-2 text-white px-8 py-4 rounded-lg text-xl font-semibold transition-colors inline-flex items-center gap-2 cursor-pointer"
+              className="bg-red-900 hover:bg-red-700 border-2 text-white px-8 py-4 rounded-lg text-lg sm:text-xl font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto flex-1"
             >
               Send Concern Anonymously
               <ScrollText className="w-5 h-5" />

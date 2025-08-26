@@ -170,11 +170,11 @@ export default function BoardPage() {
       {/* Mobile-first responsive container */}
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Header */}
-        <header className="flex justify-center items-center mb-6 sm:mb-8">
+        <header className="flex justify-center items-center mb-6 sm:mb-8 md:mb-10">
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity hover:cursor-pointer p-2 rounded-lg hover:bg-white hover:shadow-sm"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity hover:cursor-pointer p-2 rounded-lg hover:bg-gray-50"
             >
               <MessageSquare className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-red-800" />
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-red-800">
