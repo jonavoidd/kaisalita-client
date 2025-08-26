@@ -1,17 +1,13 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
-import {
-  Eye,
-  EyeOff,
-  Edit,
-  Trash2,
-  Search,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Eye, EyeOff, Search, ChevronDown, ChevronUp } from "lucide-react";
 import type Post from "../../types/post";
-import type { Priority, SubmissionType } from "../../types/input-type";
+import type {
+  Priority,
+  SubmissionType,
+  TopicArea,
+} from "../../types/input-type";
 import { getAllPost } from "../../api/posts";
 
 const PostsManagement: React.FC = () => {
@@ -25,11 +21,12 @@ const PostsManagement: React.FC = () => {
   }, [setActiveRoute]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "published" | "unpublished"
-  >("all");
+  // const [statusFilter, setStatusFilter] = useState<
+  //   "all" | "published" | "unpublished"
+  // >("all");
   const [priorityFilter, setPriorityFilter] = useState<Priority | "all">("all");
   const [typeFilter, setTypeFilter] = useState<SubmissionType | "all">("all");
+  const [topicFilter, setTopicFilter] = useState<TopicArea | "all">("all");
   const [sortField, setSortField] = useState<keyof Post>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
@@ -49,27 +46,42 @@ const PostsManagement: React.FC = () => {
 
     return posts
       .filter((post) => {
-        const matchesSearch =
-          post.submissionType
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          post.content.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = post.content
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
-        const matchesStatus =
-          statusFilter === "all" ||
-          (statusFilter === "published" && post.publish) ||
-          (statusFilter === "unpublished" && !post.publish);
+        // const matchesStatus =
+        //   statusFilter === "all" ||
+        //   (statusFilter === "published" && post.publish) ||
+        //   (statusFilter === "unpublished" && !post.publish);
 
         const matchesPriority =
           priorityFilter === "all" || post.priority === priorityFilter;
         const matchesType =
           typeFilter === "all" || post.submissionType === typeFilter;
+        const matchesTopic =
+          topicFilter === "all" || post.topicArea === topicFilter;
 
-        return matchesSearch && matchesStatus && matchesPriority && matchesType;
+        return (
+          matchesSearch &&
+          // matchesStatus &&
+          matchesPriority &&
+          matchesType &&
+          matchesTopic
+        );
       })
       .sort((a, b) => {
         const aValue = a[sortField];
         const bValue = b[sortField];
+
+        if (sortField === "createdAt" || sortField === "updatedAt") {
+          // Handle date strings
+          const aDate = new Date(aValue as string);
+          const bDate = new Date(bValue as string);
+          return sortDirection === "asc"
+            ? aDate.getTime() - bDate.getTime()
+            : bDate.getTime() - aDate.getTime();
+        }
 
         if (typeof aValue === "string" && typeof bValue === "string") {
           return sortDirection === "asc"
@@ -77,24 +89,15 @@ const PostsManagement: React.FC = () => {
             : bValue.localeCompare(aValue);
         }
 
-        if (typeof aValue === "number" && typeof bValue === "number") {
-          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-        }
-
-        if (aValue instanceof Date && bValue instanceof Date) {
-          return sortDirection === "asc"
-            ? aValue.getTime() - bValue.getTime()
-            : bValue.getTime() - aValue.getTime();
-        }
-
         return 0;
       });
   }, [
     posts,
     searchTerm,
-    statusFilter,
+    // statusFilter,
     priorityFilter,
     typeFilter,
+    topicFilter,
     sortField,
     sortDirection,
   ]);
@@ -114,8 +117,10 @@ const PostsManagement: React.FC = () => {
         return "bg-red-100 text-red-800";
       case "Needs follow-up":
         return "bg-yellow-100 text-yellow-800";
-      default:
+      case "For awareness only":
         return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -129,9 +134,32 @@ const PostsManagement: React.FC = () => {
         return "bg-purple-100 text-purple-800";
       case "Praise":
         return "bg-pink-100 text-pink-800";
+      case "Other (please specify)":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getTopicBadgeClass = (topic: TopicArea) => {
+    const colors = [
+      "bg-blue-100 text-blue-800",
+      "bg-indigo-100 text-indigo-800",
+      "bg-cyan-100 text-cyan-800",
+      "bg-teal-100 text-teal-800",
+      "bg-emerald-100 text-emerald-800",
+      "bg-amber-100 text-amber-800",
+    ];
+    const topics: TopicArea[] = [
+      "Academics",
+      "Organization/Leadership",
+      "Events or Activities",
+      "Student Well-being",
+      "Facilities or Resources",
+      "Other (please specify)",
+    ];
+    const index = topics.indexOf(topic);
+    return colors[index % colors.length];
   };
 
   if (isLoading) {
@@ -161,20 +189,20 @@ const PostsManagement: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">Posts Management</h2>
           <p className="text-gray-600">Manage and review all submissions</p>
         </div>
-        {/* <button className="bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
+        <button className="bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
           + New Post
-        </button> */}
+        </button>
       </div>
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search posts..."
+              placeholder="Search content..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
@@ -182,39 +210,59 @@ const PostsManagement: React.FC = () => {
           </div>
 
           {/* Status Filter */}
-          <select
+          {/* <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as statusFilter)}
             className="px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
           >
             <option value="all">All Status</option>
             <option value="published">Published</option>
             <option value="unpublished">Unpublished</option>
-          </select>
+          </select> */}
 
           {/* Priority Filter */}
           <select
             value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value as any)}
+            onChange={(e) => setPriorityFilter(e.target.value as Priority)}
             className="px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
           >
             <option value="all">All Priorities</option>
             <option value="Urgent">Urgent</option>
             <option value="Needs follow-up">Needs Follow-up</option>
-            <option value="Normal">Normal</option>
+            <option value="For awareness only">For awareness only</option>
           </select>
 
           {/* Type Filter */}
           <select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as any)}
+            onChange={(e) => setTypeFilter(e.target.value as SubmissionType)}
             className="px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
           >
             <option value="all">All Types</option>
-            <option value="Concern">Concern</option>
             <option value="Suggestion">Suggestion</option>
+            <option value="Concern">Concern</option>
             <option value="Idea">Idea</option>
             <option value="Praise">Praise</option>
+            <option value="Other (please specify)">Other</option>
+          </select>
+
+          {/* Topic Filter */}
+          <select
+            value={topicFilter}
+            onChange={(e) => setTopicFilter(e.target.value as TopicArea)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+          >
+            <option value="all">All Topics</option>
+            <option value="Academics">Academics</option>
+            <option value="Organization/Leadership">
+              Organization/Leadership
+            </option>
+            <option value="Events or Activities">Events or Activities</option>
+            <option value="Student Well-being">Student Well-being</option>
+            <option value="Facilities or Resources">
+              Facilities or Resources
+            </option>
+            <option value="Other (please specify)">Other</option>
           </select>
         </div>
       </div>
@@ -227,11 +275,11 @@ const PostsManagement: React.FC = () => {
               <tr>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("submissionType")}
+                  onClick={() => handleSort("content")}
                 >
                   <div className="flex items-center">
-                    Topic Area
-                    {sortField === "submissionType" &&
+                    Content
+                    {sortField === "content" &&
                       (sortDirection === "asc" ? (
                         <ChevronUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -246,6 +294,20 @@ const PostsManagement: React.FC = () => {
                   <div className="flex items-center">
                     Type
                     {sortField === "submissionType" &&
+                      (sortDirection === "asc" ? (
+                        <ChevronUp className="w-4 h-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 ml-1" />
+                      ))}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort("topicArea")}
+                >
+                  <div className="flex items-center">
+                    Topic
+                    {sortField === "topicArea" &&
                       (sortDirection === "asc" ? (
                         <ChevronUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -295,19 +357,13 @@ const PostsManagement: React.FC = () => {
                       ))}
                   </div>
                 </th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th> */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPosts.map((post) => (
                 <tr key={post.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {post.topicArea}
-                    </div>
-                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-xs break-words">
                       {post.content}
                     </div>
                   </td>
@@ -318,6 +374,15 @@ const PostsManagement: React.FC = () => {
                       )}`}
                     >
                       {post.submissionType}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${getTopicBadgeClass(
+                        post.topicArea
+                      )}`}
+                    >
+                      {post.topicArea}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -343,19 +408,7 @@ const PostsManagement: React.FC = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {post.createdAt instanceof Date
-                      ? post.createdAt.toLocaleDateString()
-                      : new Date(post.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      {/* <button className="text-blue-600 hover:text-blue-900">
-                        <Edit className="w-4 h-4" />
-                      </button> */}
-                      {/* <button className="text-red-600 hover:text-red-900">
-                        <Trash2 className="w-4 h-4" />
-                      </button> */}
-                    </div>
+                    {new Date(post.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
               ))}
@@ -370,7 +423,7 @@ const PostsManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Pagination (optional) */}
+      {/* Pagination */}
       <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200 shadow-sm">
         <div className="text-sm text-gray-700">
           Showing <span className="font-medium">{filteredPosts.length}</span> of{" "}

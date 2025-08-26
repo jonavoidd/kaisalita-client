@@ -70,7 +70,7 @@ const AdminDashboard: React.FC = () => {
     };
   }, [posts]);
 
-  const getTypeColor = (type: SubmissionType): string => {
+  const getTypeColor = (type: string): string => {
     switch (type) {
       case "Concern":
         return "bg-orange-500";
@@ -85,7 +85,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const getTopicColor = (topic: TopicArea): string => {
+  const getTopicColor = (topic: string): string => {
     const colors = [
       "bg-blue-500",
       "bg-indigo-500",
@@ -100,7 +100,7 @@ const AdminDashboard: React.FC = () => {
     return colors[index % colors.length];
   };
 
-  const getPriorityColor = (priority: Priority): string => {
+  const getPriorityColor = (priority: string): string => {
     switch (priority) {
       case "Urgent":
         return "bg-red-500";
